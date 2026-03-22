@@ -45,6 +45,7 @@ export interface User {
   username: string;
   role: UserRole;
   status: UserStatus;
+  phone?: string | null;
   leaderId?: number | null;
   leaderName?: string | null;
   createdAt: string;
@@ -284,6 +285,35 @@ export interface AgentDashboard {
   todaySales: number;
   weeklySales: number;
   rankToday?: number | null;
+}
+
+export interface UpdateProfileRequest {
+  name?: string | null;
+  phone?: string | null;
+}
+
+export interface SystemSettings {
+  imeiScanEnabled: boolean;
+  enforceMode1: boolean;
+  agentsCanDeleteDevices: boolean;
+  leadersCanAddDevices: boolean;
+}
+
+export type SendNotificationRequestTargetType =
+  (typeof SendNotificationRequestTargetType)[keyof typeof SendNotificationRequestTargetType];
+
+export const SendNotificationRequestTargetType = {
+  all: "all",
+  agents: "agents",
+  leaders: "leaders",
+  user: "user",
+} as const;
+
+export interface SendNotificationRequest {
+  title: string;
+  message: string;
+  targetType: SendNotificationRequestTargetType;
+  targetUserId?: number | null;
 }
 
 export type ListUsersParams = {

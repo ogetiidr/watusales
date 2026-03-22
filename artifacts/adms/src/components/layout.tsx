@@ -3,11 +3,16 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   Shield, Users, Smartphone, FileX, BarChart3, Settings, 
-  LogOut, Bell, Menu, X, CheckSquare, Search, BookOpen
+  LogOut, Bell, Menu, X, CheckSquare, Search, BookOpen,
+  FileDown, ClipboardList, MessageSquare, User, TrendingUp, Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { useListNotifications } from "@workspace/api-client-react";
+import { useListNotifications, useMarkNotificationRead } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 interface NavItem {
   label: string;
@@ -19,7 +24,11 @@ export function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { data: notifications } = useListNotifications();
+  const markReadMutation = useMarkNotificationRead({
+    mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/notifications"] }) }
+  });
 
   const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
@@ -32,8 +41,12 @@ export function Layout({ children }: { children: ReactNode }) {
       { label: "Agents", href: "/admin/agents", icon: <Users className="w-5 h-5" /> },
       { label: "Devices", href: "/admin/devices", icon: <Smartphone className="w-5 h-5" /> },
       { label: "Blacklist", href: "/admin/blacklist", icon: <FileX className="w-5 h-5" /> },
-      { label: "Performance", href: "/admin/performance", icon: <BarChart3 className="w-5 h-5" /> },
+      { label: "Requests", href: "/admin/requests", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Performance", href: "/admin/performance", icon: <Trophy className="w-5 h-5" /> },
+      { label: "Notifications", href: "/admin/notifications", icon: <MessageSquare className="w-5 h-5" /> },
+      { label: "Reports", href: "/admin/reports", icon: <FileDown className="w-5 h-5" /> },
       { label: "System Logs", href: "/admin/logs", icon: <BookOpen className="w-5 h-5" /> },
+      { label: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
     ];
   } else if (user?.role === "leader") {
     navItems = [
@@ -41,14 +54,19 @@ export function Layout({ children }: { children: ReactNode }) {
       { label: "My Agents", href: "/leader/agents", icon: <Users className="w-5 h-5" /> },
       { label: "Devices", href: "/leader/devices", icon: <Smartphone className="w-5 h-5" /> },
       { label: "Approvals", href: "/leader/approvals", icon: <CheckSquare className="w-5 h-5" /> },
-      { label: "Performance", href: "/leader/performance", icon: <BarChart3 className="w-5 h-5" /> },
+      { label: "Performance", href: "/leader/performance", icon: <Trophy className="w-5 h-5" /> },
+      { label: "Notifications", href: "/leader/notifications", icon: <MessageSquare className="w-5 h-5" /> },
+      { label: "Reports", href: "/leader/reports", icon: <FileDown className="w-5 h-5" /> },
+      { label: "Settings", href: "/leader/settings", icon: <Settings className="w-5 h-5" /> },
     ];
   } else if (user?.role === "agent") {
     navItems = [
       { label: "Dashboard", href: "/agent", icon: <BarChart3 className="w-5 h-5" /> },
       { label: "My Devices", href: "/agent/devices", icon: <Smartphone className="w-5 h-5" /> },
-      { label: "Requests", href: "/agent/requests", icon: <FileX className="w-5 h-5" /> },
+      { label: "Requests", href: "/agent/requests", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Performance", href: "/agent/performance", icon: <TrendingUp className="w-5 h-5" /> },
       { label: "Search Device", href: "/agent/search", icon: <Search className="w-5 h-5" /> },
+      { label: "Account", href: "/agent/account", icon: <User className="w-5 h-5" /> },
     ];
   }
 
@@ -60,9 +78,12 @@ export function Layout({ children }: { children: ReactNode }) {
           <Shield className="w-6 h-6 text-primary" />
           <span>ADMS</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="text-sidebar-foreground">
-          {sidebarOpen ? <X /> : <Menu />}
-        </Button>
+        <div className="flex items-center gap-2">
+          <NotificationBell notifications={notifications || []} unreadCount={unreadCount} onMarkRead={id => markReadMutation.mutate({ id })} />
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="text-sidebar-foreground">
+            {sidebarOpen ? <X /> : <Menu />}
+          </Button>
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -88,20 +109,20 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <div className="flex-1 px-4 py-4 space-y-0.5 overflow-y-auto">
               {navItems.map((item) => {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
                     <div className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer
+                      flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer
                       ${isActive 
                         ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-inner' 
                         : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                       }
                     `}>
                       <span className={isActive ? 'text-primary' : ''}>{item.icon}</span>
-                      <span>{item.label}</span>
+                      <span className="text-sm">{item.label}</span>
                     </div>
                   </Link>
                 );
@@ -138,15 +159,12 @@ export function Layout({ children }: { children: ReactNode }) {
         {/* Topbar */}
         <header className="h-16 border-b bg-card flex items-center justify-between px-6 shrink-0 z-10">
           <h2 className="font-display font-semibold text-lg text-foreground capitalize hidden md:block">
-            {location.split('/').pop() || 'Dashboard'}
+            {navItems.find(n => n.href === location)?.label || "Dashboard"}
           </h2>
           <div className="flex items-center gap-4 ml-auto">
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full animate-pulse" />
-              )}
-            </Button>
+            <div className="hidden md:block">
+              <NotificationBell notifications={notifications || []} unreadCount={unreadCount} onMarkRead={id => markReadMutation.mutate({ id })} />
+            </div>
           </div>
         </header>
 
@@ -156,7 +174,7 @@ export function Layout({ children }: { children: ReactNode }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="max-w-7xl mx-auto h-full"
+            className="max-w-7xl mx-auto"
           >
             {children}
           </motion.div>
@@ -171,5 +189,55 @@ export function Layout({ children }: { children: ReactNode }) {
         />
       )}
     </div>
+  );
+}
+
+function NotificationBell({ notifications, unreadCount, onMarkRead }: {
+  notifications: any[];
+  unreadCount: number;
+  onMarkRead: (id: number) => void;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 rounded-2xl p-0 shadow-xl" sideOffset={8}>
+        <div className="p-4 border-b border-border/50">
+          <h3 className="font-display font-semibold">Notifications</h3>
+          {unreadCount > 0 && <p className="text-xs text-muted-foreground">{unreadCount} unread</p>}
+        </div>
+        <div className="max-h-[360px] overflow-y-auto divide-y divide-border/30">
+          {notifications.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">No notifications</p>
+            </div>
+          ) : notifications.slice(0, 15).map(n => (
+            <div 
+              key={n.id} 
+              className={`p-4 cursor-pointer hover:bg-secondary/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+              onClick={() => !n.read && onMarkRead(n.id)}
+            >
+              <div className="flex items-start gap-3">
+                {!n.read && <div className="w-2 h-2 bg-primary rounded-full mt-1.5 shrink-0" />}
+                <div className={!n.read ? "" : "pl-5"}>
+                  <p className="text-sm font-medium">{n.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">{format(new Date(n.createdAt), "MMM d, h:mm a")}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

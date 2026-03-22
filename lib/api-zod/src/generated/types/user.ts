@@ -14,6 +14,7 @@ export interface User {
   username: string;
   role: UserRole;
   status: UserStatus;
+  phone?: string | null;
   leaderId?: number | null;
   leaderName?: string | null;
   createdAt: Date;

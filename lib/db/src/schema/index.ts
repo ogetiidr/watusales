@@ -4,3 +4,4 @@ export * from "./requests";
 export * from "./logs";
 export * from "./blacklist";
 export * from "./notifications";
+export * from "./settings";

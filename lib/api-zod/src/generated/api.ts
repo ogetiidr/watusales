@@ -29,6 +29,7 @@ export const LoginResponse = zod.object({
     username: zod.string(),
     role: zod.enum(["admin", "leader", "agent"]),
     status: zod.enum(["active", "suspended"]),
+    phone: zod.string().nullish(),
     leaderId: zod.number().nullish(),
     leaderName: zod.string().nullish(),
     createdAt: zod.date(),
@@ -53,6 +54,7 @@ export const GetCurrentUserResponse = zod.object({
   username: zod.string(),
   role: zod.enum(["admin", "leader", "agent"]),
   status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
   leaderId: zod.number().nullish(),
   leaderName: zod.string().nullish(),
   createdAt: zod.date(),
@@ -85,6 +87,7 @@ export const ListUsersResponseItem = zod.object({
   username: zod.string(),
   role: zod.enum(["admin", "leader", "agent"]),
   status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
   leaderId: zod.number().nullish(),
   leaderName: zod.string().nullish(),
   createdAt: zod.date(),
@@ -115,6 +118,7 @@ export const GetUserResponse = zod.object({
   username: zod.string(),
   role: zod.enum(["admin", "leader", "agent"]),
   status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
   leaderId: zod.number().nullish(),
   leaderName: zod.string().nullish(),
   createdAt: zod.date(),
@@ -139,6 +143,7 @@ export const UpdateUserResponse = zod.object({
   username: zod.string(),
   role: zod.enum(["admin", "leader", "agent"]),
   status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
   leaderId: zod.number().nullish(),
   leaderName: zod.string().nullish(),
   createdAt: zod.date(),
@@ -173,6 +178,7 @@ export const UpdateUserStatusResponse = zod.object({
   username: zod.string(),
   role: zod.enum(["admin", "leader", "agent"]),
   status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
   leaderId: zod.number().nullish(),
   leaderName: zod.string().nullish(),
   createdAt: zod.date(),
@@ -211,6 +217,7 @@ export const MoveAgentResponse = zod.object({
   username: zod.string(),
   role: zod.enum(["admin", "leader", "agent"]),
   status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
   leaderId: zod.number().nullish(),
   leaderName: zod.string().nullish(),
   createdAt: zod.date(),
@@ -343,6 +350,7 @@ export const SearchDeviceResponse = zod.object({
       username: zod.string(),
       role: zod.enum(["admin", "leader", "agent"]),
       status: zod.enum(["active", "suspended"]),
+      phone: zod.string().nullish(),
       leaderId: zod.number().nullish(),
       leaderName: zod.string().nullish(),
       createdAt: zod.date(),
@@ -355,6 +363,7 @@ export const SearchDeviceResponse = zod.object({
       username: zod.string(),
       role: zod.enum(["admin", "leader", "agent"]),
       status: zod.enum(["active", "suspended"]),
+      phone: zod.string().nullish(),
       leaderId: zod.number().nullish(),
       leaderName: zod.string().nullish(),
       createdAt: zod.date(),
@@ -630,4 +639,70 @@ export const GetAgentDashboardResponse = zod.object({
   todaySales: zod.number(),
   weeklySales: zod.number(),
   rankToday: zod.number().nullish(),
+});
+
+/**
+ * @summary Update user profile (phone, name)
+ */
+export const UpdateUserProfileParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateUserProfileBody = zod.object({
+  name: zod.string().nullish(),
+  phone: zod.string().nullish(),
+});
+
+export const UpdateUserProfileResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  username: zod.string(),
+  role: zod.enum(["admin", "leader", "agent"]),
+  status: zod.enum(["active", "suspended"]),
+  phone: zod.string().nullish(),
+  leaderId: zod.number().nullish(),
+  leaderName: zod.string().nullish(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Get system settings
+ */
+export const GetSettingsResponse = zod.object({
+  imeiScanEnabled: zod.boolean(),
+  enforceMode1: zod.boolean(),
+  agentsCanDeleteDevices: zod.boolean(),
+  leadersCanAddDevices: zod.boolean(),
+});
+
+/**
+ * @summary Update system settings
+ */
+export const UpdateSettingsBody = zod.object({
+  imeiScanEnabled: zod.boolean(),
+  enforceMode1: zod.boolean(),
+  agentsCanDeleteDevices: zod.boolean(),
+  leadersCanAddDevices: zod.boolean(),
+});
+
+export const UpdateSettingsResponse = zod.object({
+  imeiScanEnabled: zod.boolean(),
+  enforceMode1: zod.boolean(),
+  agentsCanDeleteDevices: zod.boolean(),
+  leadersCanAddDevices: zod.boolean(),
+});
+
+/**
+ * @summary Send notification to user(s)
+ */
+export const SendNotificationBody = zod.object({
+  title: zod.string(),
+  message: zod.string(),
+  targetType: zod.enum(["all", "agents", "leaders", "user"]),
+  targetUserId: zod.number().nullish(),
+});
+
+export const SendNotificationResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
 });

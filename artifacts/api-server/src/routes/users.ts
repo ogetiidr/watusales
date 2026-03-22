@@ -172,4 +172,27 @@ router.put("/:id/move-agent", requireRole("admin"), async (req, res) => {
   res.json(safeUser);
 });
 
+router.patch("/:id/profile", async (req, res) => {
+  const sessionUserId = (req as any).session?.userId;
+  const sessionRole = (req as any).session?.role;
+  const id = parseInt(req.params.id);
+
+  if (sessionRole === "agent" && id !== sessionUserId) {
+    res.status(403).json({ error: "Can only update your own profile" });
+    return;
+  }
+
+  const { name, phone } = req.body;
+  const update: any = {};
+  if (name) update.name = name;
+  if (phone !== undefined) update.phone = phone;
+
+  const [user] = await db.update(usersTable).set(update).where(eq(usersTable.id, id)).returning();
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  await logAction("update_profile", sessionUserId, `Updated profile for user ${id}`);
+  const { password: _pw, ...safeUser } = user;
+  res.json({ ...safeUser, leaderName: null });
+});
+
 export default router;

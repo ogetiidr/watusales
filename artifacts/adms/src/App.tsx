@@ -16,17 +16,27 @@ import AdminDevices from "@/pages/admin/devices";
 import AdminBlacklist from "@/pages/admin/blacklist";
 import AdminPerformance from "@/pages/admin/performance";
 import AdminLogs from "@/pages/admin/logs";
+import AdminSettings from "@/pages/admin/settings";
+import AdminReports from "@/pages/admin/reports";
+import AdminRequests from "@/pages/admin/requests";
+import AdminNotifications from "@/pages/admin/notifications";
 import LeaderDashboard from "@/pages/leader/dashboard";
+import LeaderAgents from "@/pages/leader/agents";
+import LeaderDevices from "@/pages/leader/devices";
 import LeaderApprovals from "@/pages/leader/approvals";
 import LeaderPerformance from "@/pages/leader/performance";
+import LeaderSettings from "@/pages/leader/settings";
+import LeaderReports from "@/pages/leader/reports";
+import LeaderNotifications from "@/pages/leader/notifications";
 import AgentDashboard from "@/pages/agent/dashboard";
 import AgentDevices from "@/pages/agent/devices";
 import AgentRequests from "@/pages/agent/requests";
 import AgentSearch from "@/pages/agent/search";
+import AgentAccount from "@/pages/agent/account";
+import AgentPerformance from "@/pages/agent/performance";
 
 const queryClient = new QueryClient();
 
-// Protected Route wrapper
 function ProtectedRoute({ component: Component, allowedRoles }: { component: any, allowedRoles: string[] }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
@@ -85,21 +95,30 @@ function Router() {
       <Route path="/admin/agents">{() => <ProtectedRoute component={AdminAgents} allowedRoles={["admin"]} />}</Route>
       <Route path="/admin/devices">{() => <ProtectedRoute component={AdminDevices} allowedRoles={["admin"]} />}</Route>
       <Route path="/admin/blacklist">{() => <ProtectedRoute component={AdminBlacklist} allowedRoles={["admin"]} />}</Route>
+      <Route path="/admin/requests">{() => <ProtectedRoute component={AdminRequests} allowedRoles={["admin"]} />}</Route>
       <Route path="/admin/performance">{() => <ProtectedRoute component={AdminPerformance} allowedRoles={["admin"]} />}</Route>
+      <Route path="/admin/notifications">{() => <ProtectedRoute component={AdminNotifications} allowedRoles={["admin"]} />}</Route>
+      <Route path="/admin/reports">{() => <ProtectedRoute component={AdminReports} allowedRoles={["admin"]} />}</Route>
       <Route path="/admin/logs">{() => <ProtectedRoute component={AdminLogs} allowedRoles={["admin"]} />}</Route>
+      <Route path="/admin/settings">{() => <ProtectedRoute component={AdminSettings} allowedRoles={["admin"]} />}</Route>
 
       {/* Leader Routes */}
       <Route path="/leader">{() => <ProtectedRoute component={LeaderDashboard} allowedRoles={["leader"]} />}</Route>
-      <Route path="/leader/agents">{() => <ProtectedRoute component={AdminAgents} allowedRoles={["leader"]} />}</Route>
-      <Route path="/leader/devices">{() => <ProtectedRoute component={AdminDevices} allowedRoles={["leader"]} />}</Route>
+      <Route path="/leader/agents">{() => <ProtectedRoute component={LeaderAgents} allowedRoles={["leader"]} />}</Route>
+      <Route path="/leader/devices">{() => <ProtectedRoute component={LeaderDevices} allowedRoles={["leader"]} />}</Route>
       <Route path="/leader/approvals">{() => <ProtectedRoute component={LeaderApprovals} allowedRoles={["leader"]} />}</Route>
       <Route path="/leader/performance">{() => <ProtectedRoute component={LeaderPerformance} allowedRoles={["leader"]} />}</Route>
+      <Route path="/leader/notifications">{() => <ProtectedRoute component={LeaderNotifications} allowedRoles={["leader"]} />}</Route>
+      <Route path="/leader/reports">{() => <ProtectedRoute component={LeaderReports} allowedRoles={["leader"]} />}</Route>
+      <Route path="/leader/settings">{() => <ProtectedRoute component={LeaderSettings} allowedRoles={["leader"]} />}</Route>
 
       {/* Agent Routes */}
       <Route path="/agent">{() => <ProtectedRoute component={AgentDashboard} allowedRoles={["agent"]} />}</Route>
       <Route path="/agent/devices">{() => <ProtectedRoute component={AgentDevices} allowedRoles={["agent"]} />}</Route>
       <Route path="/agent/requests">{() => <ProtectedRoute component={AgentRequests} allowedRoles={["agent"]} />}</Route>
+      <Route path="/agent/performance">{() => <ProtectedRoute component={AgentPerformance} allowedRoles={["agent"]} />}</Route>
       <Route path="/agent/search">{() => <ProtectedRoute component={AgentSearch} allowedRoles={["agent"]} />}</Route>
+      <Route path="/agent/account">{() => <ProtectedRoute component={AgentAccount} allowedRoles={["agent"]} />}</Route>
 
       <Route component={NotFound} />
     </Switch>

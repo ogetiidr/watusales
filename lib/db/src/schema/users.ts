@@ -12,6 +12,7 @@ export const usersTable = pgTable("users", {
   password: text("password").notNull(),
   role: roleEnum("role").notNull(),
   status: userStatusEnum("status").notNull().default("active"),
+  phone: text("phone"),
   leaderId: integer("leader_id").references((): any => usersTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

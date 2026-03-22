@@ -743,6 +743,119 @@ paths:
               schema:
                 $ref: "#/components/schemas/AgentDashboard"
 
+  /users/{id}/profile:
+    patch:
+      operationId: updateUserProfile
+      tags: [users]
+      summary: Update user profile (phone, name)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [users]
+      summary: Get system settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+    put:
+      operationId: updateSettings
+      tags: [users]
+      summary: Update system settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemSettings"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+
+  /notifications/send:
+    post:
+      operationId: sendNotification
+      tags: [notifications]
+      summary: Send notification to user(s)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendNotificationRequest"
+      responses:
+        "200":
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /reports/agents:
+    get:
+      operationId: exportAgents
+      tags: [users]
+      summary: Export agents report as CSV
+      responses:
+        "200":
+          description: CSV report
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /reports/devices:
+    get:
+      operationId: exportDevices
+      tags: [devices]
+      summary: Export devices report as CSV
+      responses:
+        "200":
+          description: CSV report
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /reports/performance:
+    get:
+      operationId: exportPerformance
+      tags: [performance]
+      summary: Export performance report as CSV
+      responses:
+        "200":
+          description: CSV report
+          content:
+            text/csv:
+              schema:
+                type: string
+
 components:
   schemas:
     HealthStatus:
@@ -819,6 +932,9 @@ components:
         status:
           type: string
           enum: [active, suspended]
+        phone:
+          type: string
+          nullable: true
         leaderId:
           type: integer
           nullable: true
@@ -1168,3 +1284,41 @@ components:
           type: integer
           nullable: true
       required: [myDevices, todaySales, weeklySales]
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+
+    SystemSettings:
+      type: object
+      properties:
+        imeiScanEnabled:
+          type: boolean
+        enforceMode1:
+          type: boolean
+        agentsCanDeleteDevices:
+          type: boolean
+        leadersCanAddDevices:
+          type: boolean
+      required: [imeiScanEnabled, enforceMode1, agentsCanDeleteDevices, leadersCanAddDevices]
+
+    SendNotificationRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        targetType:
+          type: string
+          enum: [all, agents, leaders, user]
+        targetUserId:
+          type: integer
+          nullable: true
+      required: [title, message, targetType]

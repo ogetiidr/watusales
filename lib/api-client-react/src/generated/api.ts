@@ -49,7 +49,10 @@ import type {
   RejectRequestPayload,
   ResetPasswordRequest,
   SearchDeviceParams,
+  SendNotificationRequest,
   SuccessResponse,
+  SystemSettings,
+  UpdateProfileRequest,
   UpdateStatusRequest,
   UpdateUserRequest,
   User,
@@ -3041,6 +3044,561 @@ export function useGetAgentDashboard<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetAgentDashboardQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update user profile (phone, name)
+ */
+export const getUpdateUserProfileUrl = (id: number) => {
+  return `/api/users/${id}/profile`;
+};
+
+export const updateUserProfile = async (
+  id: number,
+  updateProfileRequest: UpdateProfileRequest,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getUpdateUserProfileUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateProfileRequest),
+  });
+};
+
+export const getUpdateUserProfileMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateUserProfile>>,
+    TError,
+    { id: number; data: BodyType<UpdateProfileRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateUserProfile>>,
+  TError,
+  { id: number; data: BodyType<UpdateProfileRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateUserProfile"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateUserProfile>>,
+    { id: number; data: BodyType<UpdateProfileRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateUserProfile(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateUserProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateUserProfile>>
+>;
+export type UpdateUserProfileMutationBody = BodyType<UpdateProfileRequest>;
+export type UpdateUserProfileMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update user profile (phone, name)
+ */
+export const useUpdateUserProfile = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateUserProfile>>,
+    TError,
+    { id: number; data: BodyType<UpdateProfileRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateUserProfile>>,
+  TError,
+  { id: number; data: BodyType<UpdateProfileRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateUserProfileMutationOptions(options));
+};
+
+/**
+ * @summary Get system settings
+ */
+export const getGetSettingsUrl = () => {
+  return `/api/settings`;
+};
+
+export const getSettings = async (
+  options?: RequestInit,
+): Promise<SystemSettings> => {
+  return customFetch<SystemSettings>(getGetSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSettingsQueryKey = () => {
+  return [`/api/settings`] as const;
+};
+
+export const getGetSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({
+    signal,
+  }) => getSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSettings>>
+>;
+export type GetSettingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get system settings
+ */
+
+export function useGetSettings<
+  TData = Awaited<ReturnType<typeof getSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update system settings
+ */
+export const getUpdateSettingsUrl = () => {
+  return `/api/settings`;
+};
+
+export const updateSettings = async (
+  systemSettings: SystemSettings,
+  options?: RequestInit,
+): Promise<SystemSettings> => {
+  return customFetch<SystemSettings>(getUpdateSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(systemSettings),
+  });
+};
+
+export const getUpdateSettingsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSettings>>,
+    TError,
+    { data: BodyType<SystemSettings> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSettings>>,
+  TError,
+  { data: BodyType<SystemSettings> },
+  TContext
+> => {
+  const mutationKey = ["updateSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSettings>>,
+    { data: BodyType<SystemSettings> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSettings>>
+>;
+export type UpdateSettingsMutationBody = BodyType<SystemSettings>;
+export type UpdateSettingsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update system settings
+ */
+export const useUpdateSettings = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSettings>>,
+    TError,
+    { data: BodyType<SystemSettings> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSettings>>,
+  TError,
+  { data: BodyType<SystemSettings> },
+  TContext
+> => {
+  return useMutation(getUpdateSettingsMutationOptions(options));
+};
+
+/**
+ * @summary Send notification to user(s)
+ */
+export const getSendNotificationUrl = () => {
+  return `/api/notifications/send`;
+};
+
+export const sendNotification = async (
+  sendNotificationRequest: SendNotificationRequest,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getSendNotificationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sendNotificationRequest),
+  });
+};
+
+export const getSendNotificationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendNotification>>,
+    TError,
+    { data: BodyType<SendNotificationRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendNotification>>,
+  TError,
+  { data: BodyType<SendNotificationRequest> },
+  TContext
+> => {
+  const mutationKey = ["sendNotification"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendNotification>>,
+    { data: BodyType<SendNotificationRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return sendNotification(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendNotificationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendNotification>>
+>;
+export type SendNotificationMutationBody = BodyType<SendNotificationRequest>;
+export type SendNotificationMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send notification to user(s)
+ */
+export const useSendNotification = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendNotification>>,
+    TError,
+    { data: BodyType<SendNotificationRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendNotification>>,
+  TError,
+  { data: BodyType<SendNotificationRequest> },
+  TContext
+> => {
+  return useMutation(getSendNotificationMutationOptions(options));
+};
+
+/**
+ * @summary Export agents report as CSV
+ */
+export const getExportAgentsUrl = () => {
+  return `/api/reports/agents`;
+};
+
+export const exportAgents = async (options?: RequestInit): Promise<string> => {
+  return customFetch<string>(getExportAgentsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportAgentsQueryKey = () => {
+  return [`/api/reports/agents`] as const;
+};
+
+export const getExportAgentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAgents>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportAgents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAgentsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAgents>>> = ({
+    signal,
+  }) => exportAgents({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAgents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportAgentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAgents>>
+>;
+export type ExportAgentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Export agents report as CSV
+ */
+
+export function useExportAgents<
+  TData = Awaited<ReturnType<typeof exportAgents>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportAgents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportAgentsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Export devices report as CSV
+ */
+export const getExportDevicesUrl = () => {
+  return `/api/reports/devices`;
+};
+
+export const exportDevices = async (options?: RequestInit): Promise<string> => {
+  return customFetch<string>(getExportDevicesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportDevicesQueryKey = () => {
+  return [`/api/reports/devices`] as const;
+};
+
+export const getExportDevicesQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportDevices>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportDevices>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportDevicesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportDevices>>> = ({
+    signal,
+  }) => exportDevices({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportDevices>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportDevicesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportDevices>>
+>;
+export type ExportDevicesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Export devices report as CSV
+ */
+
+export function useExportDevices<
+  TData = Awaited<ReturnType<typeof exportDevices>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportDevices>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportDevicesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Export performance report as CSV
+ */
+export const getExportPerformanceUrl = () => {
+  return `/api/reports/performance`;
+};
+
+export const exportPerformance = async (
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getExportPerformanceUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportPerformanceQueryKey = () => {
+  return [`/api/reports/performance`] as const;
+};
+
+export const getExportPerformanceQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportPerformance>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportPerformance>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportPerformanceQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof exportPerformance>>
+  > = ({ signal }) => exportPerformance({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportPerformance>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportPerformanceQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportPerformance>>
+>;
+export type ExportPerformanceQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Export performance report as CSV
+ */
+
+export function useExportPerformance<
+  TData = Awaited<ReturnType<typeof exportPerformance>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportPerformance>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportPerformanceQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
