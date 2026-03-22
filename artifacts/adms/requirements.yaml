@@ -1,0 +1,20 @@
+packages:
+  "framer-motion": "For smooth page transitions and micro-interactions"
+  "recharts": "For beautiful analytics and dashboard charts"
+  "date-fns": "For formatting dates nicely"
+  "@hookform/resolvers": "Zod schema resolvers for form validation"
+  "react-hook-form": "Form state management"
+  "zod": "Schema validation for forms"
+  "clsx": "Utility for constructing className strings"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+  "lucide-react": "Icon set"
+
+images:
+  - path: "artifacts/adms/public/images/auth-bg.png"
+    description: "Abstract modern geometric background in deep navy blue and vibrant electric blue with soft glowing light elements and clean corporate feel"
+    aspect_ratio: "16:9"
+
+notes:
+  - The API uses HTTP-only cookies for authentication, so credentials must be included.
+  - Using wouter for routing.
+  - API Client generated via Orval from OpenAPI schema into @workspace/api-client-react.

@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Agent & Device Management System (ADMS) — A full-stack pnpm workspace monorepo. Multi-role management system with Admin, Team Leader, and Agent roles.
 
 ## Stack
 
@@ -15,82 +15,91 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Frontend**: React + Vite, Wouter (routing), TanStack React Query, shadcn/ui, Tailwind CSS
+
+## Default Login Credentials
+
+- **Admin**: `admin` / `admin123`
+- **Team Leader**: `leader1` / `leader123`
+- **Agent**: `agent1` / `agent123`
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
+├── artifacts/
+│   ├── adms/               # React + Vite frontend (Agent & Device Management System)
 │   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── scripts/                # Utility scripts
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.json
+└── package.json
 ```
 
-## TypeScript & Composite Projects
+## Features
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+### Authentication
+- Session-based auth via `express-session` with httpOnly cookies
+- Role-based access control: Admin, Leader, Agent
+- Password hashing with Node.js PBKDF2 (no external bcrypt needed)
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+### Admin Role
+- Dashboard with stats (total leaders, agents, devices, today's sales, top agent)
+- Manage team leaders (add/edit/delete)
+- Manage agents (suspend/activate, delete, move between leaders)
+- Manage devices (view all, delete, move)
+- IMEI blacklist management
+- Performance rankings (daily + weekly)
+- System activity logs
+- Password resets for any user
 
-## Root Scripts
+### Team Leader Role
+- Dashboard with team stats
+- Manage own agents (add/edit/delete)
+- Manage team devices (assign, move between agents)
+- Approval center (approve/reject delete and transfer requests)
+- Team performance rankings
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+### Agent Role
+- Dashboard with personal stats (devices, today/weekly sales, rank)
+- Add device by IMEI (with duplicate/blacklist check)
+- View own devices
+- Submit delete/transfer requests
+- Search device by IMEI
 
-## Packages
+### Device Management
+- IMEI uniqueness enforced globally
+- IMEI blacklist prevents adding/transferring blacklisted devices
+- Status tracking: active, pending, removed, blacklisted
 
-### `artifacts/api-server` (`@workspace/api-server`)
+### Performance System
+- Daily rankings (devices added today)
+- Weekly rankings (Monday-Sunday, finalized on Sunday)
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+## Database Schema
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+- `users` — all users (admin/leader/agent) with role, status, leader_id
+- `devices` — IMEI, agent_id, leader_id, status, date_added
+- `requests` — delete/transfer requests with status and rejection reason
+- `logs` — activity log for all system actions
+- `blacklist` — blacklisted IMEIs
+- `notifications` — per-user in-app notifications
 
-### `lib/db` (`@workspace/db`)
+## API Endpoints
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+All under `/api`:
+- `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/change-password`
+- `GET/POST /users`, `GET/PUT/DELETE /users/:id`, `/users/:id/status`, `/users/:id/reset-password`, `/users/:id/move-agent`
+- `GET/POST /devices`, `GET/DELETE /devices/:id`, `GET /devices/search`, `PUT /devices/:id/move`, `PUT /devices/:id/assign`
+- `GET/POST /blacklist`, `DELETE /blacklist/:id`
+- `GET/POST /requests`, `PUT /requests/:id/approve`, `PUT /requests/:id/reject`
+- `GET /performance/daily`, `GET /performance/weekly`
+- `GET /logs`
+- `GET /notifications`, `PUT /notifications/:id/read`
+- `GET /dashboard/admin`, `GET /dashboard/leader`, `GET /dashboard/agent`

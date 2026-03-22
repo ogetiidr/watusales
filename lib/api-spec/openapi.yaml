@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Agent & Device Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: agents
+    description: Agent management
+  - name: devices
+    description: Device management
+  - name: requests
+    description: Request management
+  - name: performance
+    description: Performance tracking
+  - name: logs
+    description: Activity logs
+  - name: notifications
+    description: Notifications
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,710 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, leader, agent]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended]
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{id}/status:
+    put:
+      operationId: updateUserStatus
+      tags: [users]
+      summary: Suspend or activate user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusRequest"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/reset-password:
+    post:
+      operationId: resetUserPassword
+      tags: [users]
+      summary: Reset user password (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{id}/move-agent:
+    put:
+      operationId: moveAgent
+      tags: [users]
+      summary: Move agent to different leader
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveAgentRequest"
+      responses:
+        "200":
+          description: Agent moved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /devices:
+    get:
+      operationId: listDevices
+      tags: [devices]
+      summary: List devices
+      parameters:
+        - name: agentId
+          in: query
+          schema:
+            type: integer
+        - name: leaderId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, pending, removed, blacklisted]
+      responses:
+        "200":
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+    post:
+      operationId: addDevice
+      tags: [devices]
+      summary: Add device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddDeviceRequest"
+      responses:
+        "201":
+          description: Device added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "409":
+          description: IMEI already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImeiConflictResponse"
+
+  /devices/{id}:
+    get:
+      operationId: getDevice
+      tags: [devices]
+      summary: Get device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+    delete:
+      operationId: deleteDevice
+      tags: [devices]
+      summary: Delete device (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /devices/{id}/move:
+    put:
+      operationId: moveDevice
+      tags: [devices]
+      summary: Move device to another agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveDeviceRequest"
+      responses:
+        "200":
+          description: Device moved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+
+  /devices/{id}/assign:
+    put:
+      operationId: assignDevice
+      tags: [devices]
+      summary: Assign device to an agent (leader)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignDeviceRequest"
+      responses:
+        "200":
+          description: Device assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+
+  /devices/search:
+    get:
+      operationId: searchDevice
+      tags: [devices]
+      summary: Search device by IMEI
+      parameters:
+        - name: imei
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Device found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceSearchResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /blacklist:
+    get:
+      operationId: listBlacklist
+      tags: [devices]
+      summary: List blacklisted IMEIs
+      responses:
+        "200":
+          description: Blacklisted IMEIs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlacklistEntry"
+    post:
+      operationId: blacklistImei
+      tags: [devices]
+      summary: Add IMEI to blacklist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlacklistRequest"
+      responses:
+        "201":
+          description: IMEI blacklisted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlacklistEntry"
+
+  /blacklist/{id}:
+    delete:
+      operationId: removeFromBlacklist
+      tags: [devices]
+      summary: Remove IMEI from blacklist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed from blacklist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /requests:
+    get:
+      operationId: listRequests
+      tags: [requests]
+      summary: List requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [delete, transfer]
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeviceRequest"
+    post:
+      operationId: createRequest
+      tags: [requests]
+      summary: Create request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequestPayload"
+      responses:
+        "201":
+          description: Request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceRequest"
+
+  /requests/{id}/approve:
+    put:
+      operationId: approveRequest
+      tags: [requests]
+      summary: Approve request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceRequest"
+
+  /requests/{id}/reject:
+    put:
+      operationId: rejectRequest
+      tags: [requests]
+      summary: Reject request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectRequestPayload"
+      responses:
+        "200":
+          description: Request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceRequest"
+
+  /performance/daily:
+    get:
+      operationId: getDailyPerformance
+      tags: [performance]
+      summary: Get daily performance ranking
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: leaderId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Daily performance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PerformanceEntry"
+
+  /performance/weekly:
+    get:
+      operationId: getWeeklyPerformance
+      tags: [performance]
+      summary: Get weekly performance ranking
+      parameters:
+        - name: weekStart
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: leaderId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Weekly performance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyPerformanceResponse"
+
+  /logs:
+    get:
+      operationId: listLogs
+      tags: [logs]
+      summary: List activity logs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: userId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogsResponse"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get notifications for current user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    put:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /dashboard/admin:
+    get:
+      operationId: getAdminDashboard
+      tags: [users]
+      summary: Get admin dashboard stats
+      responses:
+        "200":
+          description: Admin dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
+  /dashboard/leader:
+    get:
+      operationId: getLeaderDashboard
+      tags: [users]
+      summary: Get leader dashboard stats
+      responses:
+        "200":
+          description: Leader dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderDashboard"
+
+  /dashboard/agent:
+    get:
+      operationId: getAgentDashboard
+      tags: [users]
+      summary: Get agent dashboard stats
+      responses:
+        "200":
+          description: Agent dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentDashboard"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +750,421 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        message:
+          type: string
+      required: [user]
+
+    ChangePasswordRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+      required: [currentPassword, newPassword]
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        newPassword:
+          type: string
+      required: [newPassword]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+          enum: [admin, leader, agent]
+        status:
+          type: string
+          enum: [active, suspended]
+        leaderId:
+          type: integer
+          nullable: true
+        leaderName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, username, role, status, createdAt]
+
+    CreateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [admin, leader, agent]
+        leaderId:
+          type: integer
+          nullable: true
+      required: [name, username, password, role]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        username:
+          type: string
+        leaderId:
+          type: integer
+          nullable: true
+
+    UpdateStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, suspended]
+      required: [status]
+
+    MoveAgentRequest:
+      type: object
+      properties:
+        newLeaderId:
+          type: integer
+      required: [newLeaderId]
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+        imei:
+          type: string
+        agentId:
+          type: integer
+          nullable: true
+        leaderId:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [active, pending, removed, blacklisted]
+        dateAdded:
+          type: string
+          format: date-time
+        agentName:
+          type: string
+          nullable: true
+        leaderName:
+          type: string
+          nullable: true
+      required: [id, imei, status, dateAdded]
+
+    AddDeviceRequest:
+      type: object
+      properties:
+        imei:
+          type: string
+      required: [imei]
+
+    MoveDeviceRequest:
+      type: object
+      properties:
+        toAgentId:
+          type: integer
+      required: [toAgentId]
+
+    AssignDeviceRequest:
+      type: object
+      properties:
+        agentId:
+          type: integer
+      required: [agentId]
+
+    ImeiConflictResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        imei:
+          type: string
+        currentOwner:
+          $ref: "#/components/schemas/User"
+        device:
+          $ref: "#/components/schemas/Device"
+      required: [error, imei]
+
+    DeviceSearchResult:
+      type: object
+      properties:
+        device:
+          $ref: "#/components/schemas/Device"
+        agent:
+          $ref: "#/components/schemas/User"
+        leader:
+          $ref: "#/components/schemas/User"
+      required: [device]
+
+    BlacklistEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        imei:
+          type: string
+        reason:
+          type: string
+          nullable: true
+        addedById:
+          type: integer
+        addedByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, imei, addedById, addedByName, createdAt]
+
+    BlacklistRequest:
+      type: object
+      properties:
+        imei:
+          type: string
+        reason:
+          type: string
+          nullable: true
+      required: [imei]
+
+    DeviceRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [delete, transfer]
+        deviceId:
+          type: integer
+        deviceImei:
+          type: string
+        fromAgentId:
+          type: integer
+          nullable: true
+        fromAgentName:
+          type: string
+          nullable: true
+        toAgentId:
+          type: integer
+          nullable: true
+        toAgentName:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejectionReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, type, deviceId, deviceImei, status, createdAt, updatedAt]
+
+    CreateRequestPayload:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [delete, transfer]
+        deviceId:
+          type: integer
+        toAgentId:
+          type: integer
+          nullable: true
+      required: [type, deviceId]
+
+    RejectRequestPayload:
+      type: object
+      properties:
+        reason:
+          type: string
+          nullable: true
+
+    PerformanceEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        agentId:
+          type: integer
+        agentName:
+          type: string
+        leaderId:
+          type: integer
+          nullable: true
+        leaderName:
+          type: string
+          nullable: true
+        devicesCount:
+          type: integer
+        date:
+          type: string
+          format: date
+      required: [rank, agentId, agentName, devicesCount, date]
+
+    WeeklyPerformanceResponse:
+      type: object
+      properties:
+        weekStart:
+          type: string
+          format: date
+        weekEnd:
+          type: string
+          format: date
+        isFinalized:
+          type: boolean
+        rankings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PerformanceEntry"
+      required: [weekStart, weekEnd, isFinalized, rankings]
+
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        details:
+          type: string
+          nullable: true
+        userId:
+          type: integer
+          nullable: true
+        userName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, action, createdAt]
+
+    LogsResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityLog"
+        total:
+          type: integer
+      required: [logs, total]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [device_added, request_pending, request_approved, request_rejected, weekly_winner]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, message, type, read, createdAt]
+
+    AdminDashboard:
+      type: object
+      properties:
+        totalLeaders:
+          type: integer
+        totalAgents:
+          type: integer
+        totalDevices:
+          type: integer
+        todaySales:
+          type: integer
+        topAgentToday:
+          $ref: "#/components/schemas/PerformanceEntry"
+          nullable: true
+      required: [totalLeaders, totalAgents, totalDevices, todaySales]
+
+    LeaderDashboard:
+      type: object
+      properties:
+        totalAgents:
+          type: integer
+        totalDevices:
+          type: integer
+        pendingRequests:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityLog"
+      required: [totalAgents, totalDevices, pendingRequests, recentActivity]
+
+    AgentDashboard:
+      type: object
+      properties:
+        myDevices:
+          type: integer
+        todaySales:
+          type: integer
+        weeklySales:
+          type: integer
+        rankToday:
+          type: integer
+          nullable: true
+      required: [myDevices, todaySales, weeklySales]
