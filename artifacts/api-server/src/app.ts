@@ -3,8 +3,11 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import cookieParser from "cookie-parser";
+import connectPgSimple from "connect-pg-simple";
 import router from "./routes";
 import { logger } from "./lib/logger";
+
+const PgSession = connectPgSimple(session);
 
 const app: Express = express();
 
@@ -36,6 +39,11 @@ const sessionSecret = process.env.SESSION_SECRET || "adms-secret-key-change-in-p
 
 app.use(
   session({
+    store: new PgSession({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: false,
+      tableName: "session",
+    }),
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
