@@ -5,6 +5,7 @@ import { Smartphone, GitMerge, Trash2, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IMEIScanner } from "@/components/imei-scanner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -88,10 +89,11 @@ export default function LeaderDevices() {
               <div className="space-y-4 pt-2">
                 <div className="space-y-1.5">
                   <Label>IMEI Number</Label>
-                  <div className="flex gap-2">
-                    <Input placeholder="Enter 15-digit IMEI" value={addImei} onChange={e => setAddImei(e.target.value)} className="rounded-xl flex-1" maxLength={15} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Enter the 15-digit IMEI number of the device</p>
+                  <IMEIScanner
+                    value={addImei}
+                    onChange={setAddImei}
+                    disabled={createMutation.isPending}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Assign to Agent</Label>

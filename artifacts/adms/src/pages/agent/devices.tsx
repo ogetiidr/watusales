@@ -3,10 +3,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useListDevices, useAddDevice } from "@workspace/api-client-react";
 import { Smartphone, Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { IMEIScanner } from "@/components/imei-scanner";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -114,26 +114,22 @@ function AddDeviceDialog({ open, setOpen }: { open: boolean, setOpen: (val: bool
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <label className="text-sm font-medium">Scan or Enter IMEI</label>
-            <Input 
-              value={imei} 
-              onChange={e => setImei(e.target.value)} 
-              placeholder="Enter 15-digit IMEI" 
-              className="rounded-xl h-12 font-mono text-lg tracking-widest text-center"
-              autoFocus
+            <IMEIScanner
+              value={imei}
+              onChange={setImei}
+              disabled={addMutation.isPending}
             />
           </div>
-          <div className="flex justify-end pt-4">
-            <Button 
-              type="submit"
-              className="w-full rounded-xl h-12" 
-              disabled={!imei || addMutation.isPending}
-            >
-              {addMutation.isPending ? "Verifying..." : "Add Device"}
-            </Button>
-          </div>
+          <Button 
+            type="submit"
+            className="w-full rounded-xl h-12" 
+            disabled={!imei || imei.length < 14 || addMutation.isPending}
+          >
+            {addMutation.isPending ? "Verifying..." : "Add Device"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
