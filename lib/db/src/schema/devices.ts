@@ -8,6 +8,7 @@ export const deviceStatusEnum = pgEnum("device_status", ["active", "pending", "r
 export const devicesTable = pgTable("devices", {
   id: serial("id").primaryKey(),
   imei: text("imei").notNull().unique(),
+  model: text("model"),
   agentId: integer("agent_id").references(() => usersTable.id, { onDelete: "set null" }),
   leaderId: integer("leader_id").references(() => usersTable.id, { onDelete: "set null" }),
   status: deviceStatusEnum("status").notNull().default("active"),

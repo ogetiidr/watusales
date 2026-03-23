@@ -73,7 +73,7 @@ router.get("/", async (req, res) => {
 router.post("/", requireRole("agent", "leader", "admin"), async (req, res) => {
   const sessionUserId = (req as any).session?.userId;
   const sessionRole = (req as any).session?.role;
-  const { imei } = req.body;
+  const { imei, model } = req.body;
 
   if (!imei) { res.status(400).json({ error: "imei required" }); return; }
 
@@ -122,6 +122,7 @@ router.post("/", requireRole("agent", "leader", "admin"), async (req, res) => {
 
   const [device] = await db.insert(devicesTable).values({
     imei,
+    model: model || null,
     agentId: resolvedAgentId,
     leaderId: resolvedLeaderId,
     status: "active",

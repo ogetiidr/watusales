@@ -11,6 +11,7 @@ import notificationsRouter from "./notifications";
 import dashboardRouter from "./dashboard";
 import settingsRouter from "./settings";
 import reportsRouter from "./reports";
+import scanRouter from "./scan";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use("/notifications", notificationsRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/settings", settingsRouter);
 router.use("/reports", reportsRouter);
+router.use("/scan", scanRouter);
 
 export default router;
