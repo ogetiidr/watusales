@@ -161,9 +161,28 @@ export function Layout({ children }: { children: ReactNode }) {
           <h2 className="font-display font-semibold text-lg text-foreground capitalize hidden md:block">
             {navItems.find(n => n.href === location)?.label || "Dashboard"}
           </h2>
-          <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-3 ml-auto">
             <div className="hidden md:block">
               <NotificationBell notifications={notifications || []} unreadCount={unreadCount} onMarkRead={id => markReadMutation.mutate({ id })} />
+            </div>
+            {/* User profile with verified badge */}
+            <div className="flex items-center gap-2.5 pl-2 border-l border-border">
+              <div className="relative">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                  <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </span>
+              </div>
+              <div className="hidden sm:block leading-tight">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-semibold text-foreground truncate max-w-[120px]">{user?.name}</span>
+                </div>
+                <span className="text-[11px] text-muted-foreground capitalize">{user?.role}</span>
+              </div>
             </div>
           </div>
         </header>

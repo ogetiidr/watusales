@@ -33,10 +33,16 @@ router.post("/login", async (req, res) => {
   (req as any).session.userId = user.id;
   (req as any).session.role = user.role;
 
-  await logAction("login", user.id, `User ${user.username} logged in`);
-
   const { password: _pw, ...safeUser } = user;
-  res.json({ user: safeUser, message: "Login successful" });
+
+  (req as any).session.save(async (err: any) => {
+    if (err) {
+      res.status(500).json({ error: "Session could not be saved" });
+      return;
+    }
+    await logAction("login", user.id, `User ${user.username} logged in`);
+    res.json({ user: safeUser, message: "Login successful" });
+  });
 });
 
 router.post("/logout", async (req, res) => {
