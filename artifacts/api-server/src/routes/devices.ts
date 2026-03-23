@@ -93,13 +93,37 @@ router.post("/", requireRole("agent", "leader", "admin"), async (req, res) => {
     return;
   }
 
-  const agentUser = await db.select().from(usersTable).where(eq(usersTable.id, sessionUserId)).limit(1);
-  const leaderId = agentUser[0]?.leaderId ?? null;
+  const requestedAgentId = req.body.agentId ? parseInt(req.body.agentId) : null;
+
+  let resolvedAgentId: number | null = null;
+  let resolvedLeaderId: number | null = null;
+
+  if (sessionRole === "agent") {
+    resolvedAgentId = sessionUserId;
+    const agentUser = await db.select().from(usersTable).where(eq(usersTable.id, sessionUserId)).limit(1);
+    resolvedLeaderId = agentUser[0]?.leaderId ?? null;
+  } else if (sessionRole === "leader") {
+    resolvedAgentId = requestedAgentId;
+    resolvedLeaderId = sessionUserId;
+    if (requestedAgentId) {
+      const agentUser = await db.select().from(usersTable).where(eq(usersTable.id, requestedAgentId)).limit(1);
+      if (!agentUser.length || agentUser[0].leaderId !== sessionUserId) {
+        res.status(403).json({ error: "Agent does not belong to your team" });
+        return;
+      }
+    }
+  } else if (sessionRole === "admin") {
+    resolvedAgentId = requestedAgentId;
+    if (requestedAgentId) {
+      const agentUser = await db.select().from(usersTable).where(eq(usersTable.id, requestedAgentId)).limit(1);
+      resolvedLeaderId = agentUser[0]?.leaderId ?? null;
+    }
+  }
 
   const [device] = await db.insert(devicesTable).values({
     imei,
-    agentId: sessionRole === "agent" ? sessionUserId : null,
-    leaderId: sessionRole === "leader" ? sessionUserId : (sessionRole === "agent" ? leaderId : null),
+    agentId: resolvedAgentId,
+    leaderId: resolvedLeaderId,
     status: "active",
   }).returning();
 
